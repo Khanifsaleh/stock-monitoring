@@ -20,9 +20,9 @@ class CNBCScraper(BaseScraper):
         df = pd.DataFrame([{
             "title": e.title,
             "link": e.link,
-            "published": e.published
+            "published": pd.to_datetime(e.published).strftime('%Y-%m-%d %H:%M:%S')
         } for e in feed.entries])
-        df["published"] = pd.to_datetime(df["published"], errors="coerce")
+        df["published"] = pd.to_datetime(df["published"])
         return df
 
     def fetch_article_content(self, link) -> str:

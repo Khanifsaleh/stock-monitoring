@@ -36,6 +36,20 @@ class BaseScraper(ABC):
         if not df.empty:
             df.to_sql(self.table_name, self.conn, if_exists="append", index=False)
 
+
+    def get_last_rowid(self):
+        """Get the last rowid from the table."""
+        query = f"SELECT MAX(rowid) AS last_rowid FROM {self.table_name}"
+        df = pd.read_sql(query, self.conn)
+        return df['last_rowid'].iloc[0] if not df.empty else 0
+
+    def add_rowid(self, df: pd.DataFrame):
+        """Add a rowid column to the DataFrame."""
+        last_rowid = self.get_last_rowid()
+        if last_rowid is not None:
+            df['rowid'] = range(last_rowid + 1, last_rowid + 1 + len(df))
+        return df
+
     def add_metadata(self, df: pd.DataFrame):
         """Add metadata columns for data warehouse."""
         df['source'] = self.source
@@ -43,6 +57,7 @@ class BaseScraper(ABC):
         df['DW_LOAD_TS'] = df['DW_LOAD_TS'].dt.tz_localize('Asia/Jakarta')
         df['DW_MODIFY_TS'] = pd.to_datetime('now')
         df['DW_MODIFY_TS'] = df['DW_MODIFY_TS'].dt.tz_localize('Asia/Jakarta')
+        df = self.add_rowid(df)
         return df
 
     @abstractmethod

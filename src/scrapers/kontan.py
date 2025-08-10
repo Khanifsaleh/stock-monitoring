@@ -64,7 +64,7 @@ class KontanScraper(BaseScraper):
 
                 all_links.extend([(date, link) for link in new_links])
                 per_page += 20
-                time.sleep(random.uniform(*self.delay_request_range))
+                time.sleep(random.uniform(1, 10))
 
         df = pd.DataFrame(all_links, columns=['published', 'link'])
         df['published'] = pd.to_datetime(df['published'])
