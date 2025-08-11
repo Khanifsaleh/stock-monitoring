@@ -94,7 +94,7 @@ class IQPlusScraper(BaseScraper):
             tag.decompose()
 
         news_content = zoom_div.get_text(separator="\n", strip=True)
-        news_content = self.clean_text(news_content)
+        news_content = clean_text(news_content)
 
         return news_content
 
