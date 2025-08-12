@@ -30,7 +30,7 @@ class CNBCScraper(BaseScraper):
         soup = BeautifulSoup(resp.text, "html.parser")
         div = soup.find("div", class_="detail-text")
         if not div:
-            return ""
+            return None
         return " ".join(p.get_text(strip=True) for p in div.find_all("p"))
 
     def scrape(self, last_date, links=None) -> pd.DataFrame:
@@ -40,6 +40,11 @@ class CNBCScraper(BaseScraper):
         if df.empty:
             return pd.DataFrame(columns=["published", "link", "title", "content"])
         for i, row in tqdm(df.iterrows(), total=df.shape[0], desc=f"Scraping {self.source}"):
-            df.at[i, "content"] = self.fetch_article_content(row["link"])
+            content = self.fetch_article_content(row["link"])
+            df.at[i, "content"] = content
             time.sleep(random.uniform(*self.delay_request_range))
+        df = df.dropna(subset=["content"])
+        if df.empty:
+            return pd.DataFrame(columns=["published", "link", "title", "content"])
+
         return df[["published", "link", "title", "content"]]

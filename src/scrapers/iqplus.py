@@ -82,12 +82,12 @@ class IQPlusScraper(BaseScraper):
     def fetch_article_content(self, link):
         resp = requests.get(link, headers=self.headers)
         if resp.status_code != 200:
-            return ""
+            return None
 
         soup = BeautifulSoup(resp.text, "html.parser")
         zoom_div = soup.find("div", id="zoomthis")
         if not zoom_div:
-            return ""
+            return None
 
         # Remove unwanted tags
         for tag in zoom_div.find_all(["small", "h3"]):
@@ -106,5 +106,8 @@ class IQPlusScraper(BaseScraper):
             content = self.fetch_article_content(row["link"])
             df.at[i, 'content'] = content
             time.sleep(random.uniform(*self.delay_request_range))
+        df = df.dropna(subset=["content"])
+        if df.empty:
+            return pd.DataFrame(columns=["published", "link", "title", "content"])
         
         return df[["published", "link", "title", "content"]]

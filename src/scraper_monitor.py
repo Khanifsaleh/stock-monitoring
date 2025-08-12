@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.db_setup import init_status_table, update_status, get_status, get_news_counts
+from utils.db_setup import init_status_table, update_status, get_status, get_news_counts, update_db_to_repo
 from run_scrapers import RunScrapers
 
 st.set_page_config(page_title="Scraper Dashboard", layout="wide")
@@ -38,3 +38,4 @@ def run_scraping():
 if st.button("Run Scraping Now"):
     with st.spinner("Scraping in progress... please wait"):
         run_scraping()
+        update_db_to_repo()

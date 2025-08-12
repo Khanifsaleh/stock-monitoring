@@ -85,12 +85,12 @@ class BisnisScraper(BaseScraper):
             resp.raise_for_status()
         except requests.RequestException as e:
             print(f"[ERROR] Failed to fetch article {link}: {e}")
-            return ""
+            return None
 
         soup = BeautifulSoup(resp.text, "html.parser")
         article_body = soup.find('article', class_='detailsContent')
         if not article_body:
-            return ""
+            return None
 
         paragraphs = article_body.find_all('p')
         content = ' '.join([
@@ -119,5 +119,8 @@ class BisnisScraper(BaseScraper):
             content = self.fetch_article_content(row["link"])
             df.at[i, "content"] = content
             time.sleep(random.uniform(*self.delay_request_range))
+        df = df.dropna(subset=["content"])
+        if df.empty:
+            return pd.DataFrame(columns=["published", "link", "title", "content"])
 
         return df[["published", "link", "title", "content"]]

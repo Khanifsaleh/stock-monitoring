@@ -82,7 +82,10 @@ class IDXScraper(BaseScraper):
             page += 1
             time.sleep(random.uniform(1, 10))
 
-        return whole_content.strip()
+        whole_content = whole_content.strip()
+        if not whole_content:
+            return None
+        return whole_content
 
     def scrape(self, last_date, scraped_links):
         """
@@ -104,5 +107,8 @@ class IDXScraper(BaseScraper):
             content = self.fetch_article_content(row["link"])
             df.at[i, "content"] = content
             time.sleep(random.uniform(*self.delay_request_range))
+        df = df.dropna(subset=["content"])
+        if df.empty:
+            return pd.DataFrame(columns=["published", "link", "title", "content"])
 
         return df[["published", "link", "title", "content"]]

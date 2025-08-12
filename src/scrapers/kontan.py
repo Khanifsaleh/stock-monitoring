@@ -83,11 +83,11 @@ class KontanScraper(BaseScraper):
             'Selanjutnya:'
         }
         try:
-            resp = requests.get(link, timeout=15)
+            resp = requests.get(link, timeout=30)
             resp.raise_for_status()
         except requests.RequestException as e:
             print(f"[ERROR] Failed to fetch article {link}: {e}")
-            return "", ""
+            return None, None
 
         soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -115,7 +115,6 @@ class KontanScraper(BaseScraper):
 
         titles = []
         contents = []
-
         for _, row in tqdm(df.iterrows(), total=len(df), desc=f"Scraping {self.source}"):
             title, content = self.fetch_article_content(row["link"])
             titles.append(title)
@@ -124,4 +123,7 @@ class KontanScraper(BaseScraper):
 
         df["title"] = titles
         df["content"] = contents
+        df = df.dropna(subset=["content", "title"])
+        if df.empty:
+            return pd.DataFrame(columns=["published", "link", "title", "content"])
         return df[["published", "link", "title", "content"]]

@@ -56,12 +56,12 @@ class PasarDanaScraper(BaseScraper):
             resp.raise_for_status()
         except requests.RequestException as e:
             print(f"[ERROR] Failed to fetch {link}: {e}")
-            return ""
+            return None
 
         soup = BeautifulSoup(resp.text, "html.parser")
         section = soup.find('section', class_='entry-content')
         if not section:
-            return ""
+            return None
 
         paragraphs = section.find_all('p')
         content = " ".join([p.get_text() for p in paragraphs])
@@ -88,7 +88,10 @@ class PasarDanaScraper(BaseScraper):
             return pd.DataFrame(columns=["published", "link", "title", "content"])
 
         for i, row in tqdm(df.iterrows(), total=df.shape[0], desc=f"Scraping {self.source}"):
-            df.at[i, "content"] = self.fetch_article_content(row["link"])
+            content = self.fetch_article_content(row["link"])
+            df.at[i, "content"] = content
             time.sleep(random.uniform(*self.delay_request_range))
-        
+        df = df.dropna(subset=["content"])
+        if df.empty:
+            return pd.DataFrame(columns=["published", "link", "title", "content"])
         return df
