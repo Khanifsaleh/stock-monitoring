@@ -1,7 +1,3 @@
-import os
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "data", "db", "stock_news.db")
-
 TABLE_NEWS = "news"
 SCRAPER_CONFIG = {
     "delay_request_range": [1, 20],

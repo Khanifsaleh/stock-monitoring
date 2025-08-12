@@ -1,15 +1,6 @@
 import streamlit as st
-import pandas as pd
-import sqlite3
-import time
-from datetime import datetime, timedelta
-from utils.db_setup import init_status_table, update_status, get_status, now_jakarta
+from utils.db_setup import init_status_table, update_status, get_status, get_news_counts
 from run_scrapers import RunScrapers
-import sys
-
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-from config import DB_PATH
 
 st.set_page_config(page_title="Scraper Dashboard", layout="wide")
 init_status_table()
@@ -19,18 +10,6 @@ st.title("📰 Stock News Scraper Dashboard")
 st.subheader("Status Overview")
 status_df = get_status()
 st.dataframe(status_df)
-
-# --- Show scraped news counts
-def get_news_counts():
-    conn = sqlite3.connect(DB_PATH)
-    try:
-        df = pd.read_sql("SELECT source, COUNT(*) as count FROM news GROUP BY source", conn)
-        total_count = df["count"].sum()
-    except Exception:
-        df = pd.DataFrame(columns=["source", "count"])
-        total_count = 0
-    conn.close()
-    return total_count, df
 
 total_count, per_source_df = get_news_counts()
 st.metric("Total News", total_count)

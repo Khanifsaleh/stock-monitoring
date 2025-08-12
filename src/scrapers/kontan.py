@@ -1,5 +1,4 @@
 from .base import BaseScraper
-from utils import clean_text
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -9,8 +8,8 @@ from tqdm import tqdm
 from datetime import datetime
 
 class KontanScraper(BaseScraper):
-    def __init__(self, db_path, table_name, base_url, delay_request_range):
-        super().__init__(db_path=db_path, table_name=table_name, source="kontan")
+    def __init__(self, conn, table_name, base_url, delay_request_range):
+        super().__init__(conn=conn, table_name=table_name, source="kontan")
         self.base_url = base_url
         self.delay_request_range = delay_request_range
 
@@ -104,7 +103,7 @@ class KontanScraper(BaseScraper):
                 for p in paragraphs
                 if not any(phrase in p.get_text() for phrase in exclude_phrases)
             ]
-            content = clean_text(" ".join(content_parts))
+            content = " ".join(content_parts)
 
         return title, content
 

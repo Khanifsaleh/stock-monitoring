@@ -1,5 +1,4 @@
 from .base import BaseScraper
-from utils import clean_text
 import pandas as pd
 import requests
 import feedparser
@@ -10,8 +9,8 @@ from tqdm import tqdm
 from urllib.parse import urlparse
 
 class IDXScraper(BaseScraper):
-    def __init__(self, db_path, table_name, base_url, delay_request_range):
-        super().__init__(db_path=db_path, table_name=table_name, source="idx")
+    def __init__(self, conn, table_name, base_url, delay_request_range):
+        super().__init__(conn=conn, table_name=table_name, source="idx")
         self.base_url = base_url
         self.delay_request_range = delay_request_range
 
@@ -78,7 +77,6 @@ class IDXScraper(BaseScraper):
 
             paragraphs = container2.find_all('p')
             content = " ".join([p.get_text() for p in paragraphs])
-            content = clean_text(content)
             whole_content += " " + content
 
             page += 1
@@ -97,6 +95,8 @@ class IDXScraper(BaseScraper):
             pd.DataFrame: Columns ['published', 'link', 'title', 'content']
         """
         df = self.fetch_rss()
+        if df.empty:
+            return pd.DataFrame(columns=["published", "link", "title", "content"])
         df = df[(df["published"] > last_date) & (~df["link"].isin(set(scraped_links)))]
         if df.empty:
             return pd.DataFrame(columns=["published", "link", "title", "content"])
@@ -105,5 +105,4 @@ class IDXScraper(BaseScraper):
             df.at[i, "content"] = content
             time.sleep(random.uniform(*self.delay_request_range))
 
-        df['content'] = df['content'].apply(clean_text)
         return df[["published", "link", "title", "content"]]

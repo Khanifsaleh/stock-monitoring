@@ -1,5 +1,4 @@
 from .base import BaseScraper
-from utils import clean_text
 import pandas as pd
 import requests
 import feedparser
@@ -9,8 +8,8 @@ import time
 from tqdm import tqdm
 
 class CNBCScraper(BaseScraper):
-    def __init__(self, db_path, table_name, base_url, delay_request_range):
-        super().__init__(db_path=db_path, table_name=table_name, source="cnbc")
+    def __init__(self, conn, table_name, base_url, delay_request_range):
+        super().__init__(conn=conn, table_name=table_name, source="cnbc")
         self.base_url = base_url
         self.delay_request_range = delay_request_range
 
@@ -43,5 +42,4 @@ class CNBCScraper(BaseScraper):
         for i, row in tqdm(df.iterrows(), total=df.shape[0], desc=f"Scraping {self.source}"):
             df.at[i, "content"] = self.fetch_article_content(row["link"])
             time.sleep(random.uniform(*self.delay_request_range))
-        df['content'] = df['content'].apply(clean_text)
         return df[["published", "link", "title", "content"]]

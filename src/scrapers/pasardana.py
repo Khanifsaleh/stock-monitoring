@@ -1,5 +1,4 @@
 from .base import BaseScraper
-from utils import clean_text
 import pandas as pd
 import requests
 import feedparser
@@ -10,8 +9,8 @@ from tqdm import tqdm
 from urllib.parse import urlparse
 
 class PasarDanaScraper(BaseScraper):
-    def __init__(self, db_path, table_name, base_url, delay_request_range):
-        super().__init__(db_path=db_path, table_name=table_name, source="pasardana")
+    def __init__(self, conn, table_name, base_url, delay_request_range):
+        super().__init__(conn=conn, table_name=table_name, source="pasardana")
         self.base_url = base_url
         self.delay_request_range = delay_request_range
 
@@ -66,7 +65,7 @@ class PasarDanaScraper(BaseScraper):
 
         paragraphs = section.find_all('p')
         content = " ".join([p.get_text() for p in paragraphs])
-        return clean_text(content)
+        return content
 
     def scrape(self, last_date, scraped_links):
         """

@@ -1,14 +1,13 @@
-import sqlite3
 import pandas as pd
 from abc import ABC, abstractmethod
+from utils import clean_text
 
 class BaseScraper(ABC):
-    def __init__(self, db_path, table_name, source):
-        self.db_path = db_path
+    def __init__(self, conn, table_name, source):
         self.table_name = table_name
         self.source = source
-        self.conn = sqlite3.connect(self.db_path)
-        
+        self.conn = conn
+
     def get_last_date(self):
         """Get the most recent published date from DB"""
         query = f"""
@@ -16,7 +15,7 @@ class BaseScraper(ABC):
             FROM {self.table_name}
             WHERE source = '{self.source}'
         """
-        last_date = pd.read_sql(query, self.conn)["last_date"].iloc[0]
+        last_date = pd.read_sql(query, con=self.conn.engine)["last_date"].iloc[0]
         return pd.to_datetime(last_date)
     
     def get_scraped_links(self, last_date):
@@ -25,22 +24,22 @@ class BaseScraper(ABC):
         query = f"""
                     SELECT DISTINCT link as link
                     FROM {self.table_name}
-                    WHERE DATETIME(published) >= ?
+                    WHERE DATETIME(published) >= '{last_date}'
                     AND source = '{self.source}'
                 """
-        df = pd.read_sql(query, self.conn, params=(last_date,))
+        df = pd.read_sql(query, self.conn.engine)
         return df['link'].tolist() if not df.empty else []
 
     def save_to_db(self, df: pd.DataFrame):
         """Append new records to the database."""
         if not df.empty:
-            df.to_sql(self.table_name, self.conn, if_exists="append", index=False)
+            df.to_sql(self.table_name, self.conn.engine, if_exists="append", index=False)
 
 
     def get_last_rowid(self):
         """Get the last rowid from the table."""
         query = f"SELECT MAX(rowid) AS last_rowid FROM {self.table_name}"
-        df = pd.read_sql(query, self.conn)
+        df = pd.read_sql(query, self.conn.engine)
         return df['last_rowid'].iloc[0] if not df.empty else 0
 
     def add_rowid(self, df: pd.DataFrame):
@@ -78,8 +77,9 @@ class BaseScraper(ABC):
             print("No new data to save.")
             return
         new_data = self.add_metadata(new_data)
+        new_data['content'] = new_data['content'].apply(clean_text)
         self.save_to_db(new_data)
         print(f"Saved {len(new_data)} new records.")
 
-    def __del__(self):
-        self.conn.close()
+    # def __del__(self):
+    #     self.conn.close()

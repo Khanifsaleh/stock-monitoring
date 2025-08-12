@@ -9,7 +9,8 @@ import random
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-from config import DB_PATH, SCRAPER_CONFIG, TABLE_NEWS
+from config import SCRAPER_CONFIG, TABLE_NEWS
+from utils.db_setup import conn
 
 class RunScrapers:
     def __init__(self, source):
@@ -20,7 +21,7 @@ class RunScrapers:
 
     def set_params(self, source):
         return  {
-            "db_path": DB_PATH,
+            "conn" : conn,
             "table_name": TABLE_NEWS,
             "base_url": SCRAPER_CONFIG[source]["base_url"],
             "delay_request_range": SCRAPER_CONFIG["delay_request_range"]

@@ -1,5 +1,4 @@
 from .base import BaseScraper
-from utils import clean_text
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -9,8 +8,8 @@ from tqdm import tqdm
 from datetime import datetime
 
 class IQPlusScraper(BaseScraper):
-    def __init__(self, db_path, table_name, base_url, delay_request_range):
-        super().__init__(db_path=db_path, table_name=table_name, source="iqplus")
+    def __init__(self, conn, table_name, base_url, delay_request_range):
+        super().__init__(conn=conn, table_name=table_name, source="iqplus")
         self.base_url = base_url
         self.delay_request_range = delay_request_range
         self.headers = {
@@ -71,8 +70,9 @@ class IQPlusScraper(BaseScraper):
             # Stop if older than last_date
             if df_current_page['published'].min().normalize() < last_date.normalize():
                 break
-
-            df = pd.concat([df, df_current_page], ignore_index=True)
+            
+            if not df.empty:
+                df = pd.concat([df, df_current_page], ignore_index=True)
 
             time.sleep(random.uniform(1, 10))
             page += 1
@@ -94,8 +94,6 @@ class IQPlusScraper(BaseScraper):
             tag.decompose()
 
         news_content = zoom_div.get_text(separator="\n", strip=True)
-        news_content = clean_text(news_content)
-
         return news_content
 
     def scrape(self, last_date, scraped_links):

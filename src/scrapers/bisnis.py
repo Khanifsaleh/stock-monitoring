@@ -1,5 +1,4 @@
 from .base import BaseScraper
-from utils import clean_text
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -9,8 +8,8 @@ from tqdm import tqdm
 from datetime import datetime
 
 class BisnisScraper(BaseScraper):
-    def __init__(self, db_path, table_name, base_url, delay_request_range):
-        super().__init__(db_path=db_path, table_name=table_name, source="bisnis")
+    def __init__(self, conn, table_name, base_url, delay_request_range):
+        super().__init__(conn=conn, table_name=table_name, source="bisnis")
         self.base_url = base_url
         self.delay_request_range = delay_request_range
 
@@ -94,11 +93,11 @@ class BisnisScraper(BaseScraper):
             return ""
 
         paragraphs = article_body.find_all('p')
-        content = clean_text(' '.join([
-            clean_text(p.get_text(separator=" ", strip=True))
+        content = ' '.join([
+            p.get_text(separator=" ", strip=True)
             for p in paragraphs
             if p.get_text(strip=True) and not p.get_text(strip=True).startswith('#')
-        ]))
+        ])
         return content
 
     def scrape(self, last_date, scraped_links):
